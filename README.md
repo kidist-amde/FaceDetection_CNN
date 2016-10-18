@@ -12,3 +12,9 @@ Reference:
 [1]https://lrs.icg.tugraz.at/research/aflw/<p/>
 [2] http://nbviewer.ipython.org/github/BVLC/caffe/blob/master/examples/net_surgery.ipynb<p/>
 
+##TODO
+The image preporcessing creation has the following defienceies
+
+1. Doesn't create as many as images as it was reported in the paper(arround 20.2 Million images)
+2. Doesn't really avoid overlaping faces to assume non overlap. Needs to be fixed. 
+3. Isn't Threaded till NOW.

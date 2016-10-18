@@ -1,8 +1,8 @@
 from PIL import Image
 import numpy as np
 import random
-
-
+from itertools import islice
+from multiprocessing import Process
 def IoUofTwoSameImages(region1, region2):
     #clock-wise
     m1 = ((region1[0], region1[1]),  (region1[2], region1[1]), (region1[2],region1[3]),(region1[0], region1[3]))
@@ -29,39 +29,11 @@ def IoUofTwoSameImages(region1, region2):
             intersection = abs((result[3][0] - result[0][0]) * (result[3][1] - result[0][1]))
     #print region1, region2, intersection/float(area - intersection)
     return intersection/float(area - intersection)
-
-if __name__ == "__main__":
-    #write to file
-    output = open('aflw.list', 'w')
-    #read faces rect from file
-    faces_file = open('face_rect.txt', 'r')
-    imageFaces = {}
-    for line in faces_file.readlines():
-        if(not line.startswith('#')):
-            imagePath = line.split('\t')[1].strip()
-            if(imagePath in imageFaces):
-                imageFaces[imagePath].append(line)
-            else:
-                imageFaces[imagePath] = [line]
-    faces_file.close()
-    #del the proprocess image.
-########################################### 
-   #has_pro = open('aflw.list5', 'r')
-   # for line in has_pro.readlines():
-#	has_image = line.split(' ')[0].split('/')[-1].split('_')[0] + '.jpg'
- #       if('flickr/3/' + has_image in imageFaces):
- 	   # print has_image
-#	    imageFaces.pop('flickr/3/' + has_image, None)
-#	elif('flickr/0/' + has_image in imageFaces): 
-	   # print has_image
- #           imageFaces.pop('flickr/0/' + has_image, None)
-       # elif('flickr/2/' + has_image in imageFaces): 
-           # print has_image
-         #   imageFaces.pop('flickr/2/' + has_image, None)
-#####################################
+def process(imageFaces,name):
+    output = open(name, 'w')
     count = 0
     for imagePath, faces in imageFaces.iteritems():
-        imagePath = 'aflw/data/' + imagePath
+        imagePath = '/home/icog-labs/dataset/aflw/data/' + imagePath
         try:
             im = Image.open(imagePath)
             face_regions = []
@@ -89,14 +61,15 @@ if __name__ == "__main__":
             for i in range(0, im.size[0]- face_width + 1, step):
                 for j in range(0, im.size[1] - face_height + 1, step):
                     #crop the image.
-                   # crop = im.crop((i,j, i + face_width, j+face_height))
+                    crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
+
                     iou_face = False
                     for face_region in face_regions:
                         IoU = IoUofTwoSameImages((i,j, i + face_width, j+face_height), (face_region[0], face_region[1], face_region[2], face_region[3]))
                         if(IoU >= 0.5):
-                            crop = im.crop((i,j, i + face_width, j+face_height))
-			    crop.save("crop_images/face/" + imageName + "_" + str(count) + ".jpg")
-                            output.write("crop_images/face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                            crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
+                            crop.save("/home/icog-labs/crop_images/face/" + imageName + "_" + str(count) + ".jpg")
+                            output.write("/home/icog-labs/crop_images/face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                             count += 1
                             iou_face = True
                     if(iou_face):
@@ -112,9 +85,9 @@ if __name__ == "__main__":
                                 remove = 0
                                 if(type(array.std(axis=0)) is np.float64):
                                     if(array.std(axis=0) < 8 and random.random() < 0.05):
-					crop = im.crop((i,j, i + face_width, j+face_height))
-                                        crop.save("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
+                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
+                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
                                         continue
                                 elif(type(array.std(axis=0)) is not np.float64):
@@ -123,19 +96,58 @@ if __name__ == "__main__":
                                         if(k < 8):
                                             remove += 1
                                     if(remove == 3 and random.random() < 0.05):
-                                        crop = im.crop((i,j, i + face_width, j+face_height))
-				        crop.save("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
+                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
+                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
                                         continue
                                     if(random.random() < 0.1):
-                                        crop = im.crop((i,j, i + face_width, j+face_height))
-				        crop.save("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
+                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
+                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
-            print count
+            # print count
         except IOError:
                 print "No such file", imagePath
+def chunks(data, SIZE=7000):
+    it = iter(data)
+    for i in xrange(0, len(data), SIZE):
+        yield {k:data[k] for k in islice(it, SIZE)}
+
+if __name__ == "__main__":
+    #write to file
+    # output = open('aflw.list', 'w')
+    #read faces rect from file
+    faces_file = open('face_rect.txt', 'r')
+    imageFaces = {}
+    for line in faces_file.readlines():
+        if(not line.startswith('#')):
+            imagePath = line.split('\t')[1].strip()
+            if(imagePath in imageFaces):
+                imageFaces[imagePath].append(line)
+            else:
+                imageFaces[imagePath] = [line]
+    faces_file.close()
+    #del the proprocess image.
+########################################### 
+   #has_pro = open('aflw.list5', 'r')
+   # for line in has_pro.readlines():
+#	has_image = line.split(' ')[0].split('/')[-1].split('_')[0] + '.jpg'
+ #       if('flickr/3/' + has_image in imageFaces):
+ 	   # print has_image
+#	    imageFaces.pop('flickr/3/' + has_image, None)
+#	elif('flickr/0/' + has_image in imageFaces): 
+	   # print has_image
+ #           imageFaces.pop('flickr/0/' + has_image, None)
+       # elif('flickr/2/' + has_image in imageFaces): 
+           # print has_image
+         #   imageFaces.pop('flickr/2/' + has_image, None)
+#####################################
+    count=0
+    separated_dicts = chunks(imageFaces,len(imageFaces)/6)
+    for i in separated_dicts:
+        Process(target=process,args=(i,"aflw.list_"+str(count))).start()
+        count+=1
 
 
 
