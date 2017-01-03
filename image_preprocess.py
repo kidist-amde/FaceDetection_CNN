@@ -3,6 +3,9 @@ import numpy as np
 import random
 from itertools import islice
 from multiprocessing import Process
+base_aflw_data = '/home/icog-labs/dataset/aflw/data/' 
+face_location = "/home/icog-labs/crop_images/face/" 
+nonface_location ="/home/icog-labs/crop_images/non-face/"  
 def IoUofTwoSameImages(region1, region2):
     #clock-wise
     m1 = ((region1[0], region1[1]),  (region1[2], region1[1]), (region1[2],region1[3]),(region1[0], region1[3]))
@@ -33,7 +36,7 @@ def process(imageFaces,name):
     output = open(name, 'w')
     count = 0
     for imagePath, faces in imageFaces.iteritems():
-        imagePath = '/home/icog-labs/dataset/aflw/data/' + imagePath
+        imagePath = base_aflw_data + imagePath
         try:
             im = Image.open(imagePath)
             face_regions = []
@@ -68,8 +71,8 @@ def process(imageFaces,name):
                         IoU = IoUofTwoSameImages((i,j, i + face_width, j+face_height), (face_region[0], face_region[1], face_region[2], face_region[3]))
                         if(IoU >= 0.5):
                             crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
-                            crop.save("/home/icog-labs/crop_images/face/" + imageName + "_" + str(count) + ".jpg")
-                            output.write("/home/icog-labs/crop_images/face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                            crop.save(face_location + imageName + "_" + str(count) + ".jpg")
+                            output.write(face_location+ imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                             count += 1
                             iou_face = True
                     if(iou_face):
@@ -86,8 +89,8 @@ def process(imageFaces,name):
                                 if(type(array.std(axis=0)) is np.float64):
                                     if(array.std(axis=0) < 8 and random.random() < 0.05):
                                         crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
-                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop.save(nonface_location + imageName + "_" + str(count) + ".jpg")
+                                        output.write(nonface_location + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
                                         continue
                                 elif(type(array.std(axis=0)) is not np.float64):
@@ -97,14 +100,14 @@ def process(imageFaces,name):
                                             remove += 1
                                     if(remove == 3 and random.random() < 0.05):
                                         crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
-                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop.save(nonface_location+ imageName + "_" + str(count) + ".jpg")
+                                        output.write(nonface_location+ imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
                                         continue
                                     if(random.random() < 0.1):
                                         crop = im.crop((i,j, i + face_width, j+face_height)).resize((227,227))
-                                        crop.save("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg")
-                                        output.write("/home/icog-labs/crop_images/non-face/" + imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
+                                        crop.save(nonface_location+ imageName + "_" + str(count) + ".jpg")
+                                        output.write(nonface_location+ imageName + "_" + str(count) + ".jpg" + " " + str(IoU) + "\n")
                                         count += 1
             # print count
         except IOError:
@@ -148,11 +151,3 @@ if __name__ == "__main__":
     for i in separated_dicts:
         Process(target=process,args=(i,"aflw.list_"+str(count))).start()
         count+=1
-
-
-
-
-
-
-
-
